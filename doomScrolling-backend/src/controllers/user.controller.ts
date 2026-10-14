@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 
 // libraries
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 // utilities
 import { asyncHandler } from "@/utils/asyncHandler";
@@ -22,6 +23,8 @@ import {
   userRegisterSchema,
   type userLoginInput,
   userLoginSchema,
+  type userPasswordChangeInput,
+  userPasswordChangeSchema,
 } from "@/validators/user.validators";
 
 // mongoose models
@@ -247,7 +250,9 @@ export const refreshAccessToken = asyncHandler(
       const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 
       if (!refreshTokenSecret) {
-        console.error("REFRESH_TOKEN_SECRET environment variable is not defined");
+        console.error(
+          "REFRESH_TOKEN_SECRET environment variable is not defined",
+        );
         return responseHandler.sendError(
           response,
           500,
@@ -256,7 +261,7 @@ export const refreshAccessToken = asyncHandler(
       }
 
       let decodedToken: JwtRefreshPayload;
-      
+
       try {
         decodedToken = jwt.verify(
           incomingRefreshToken,
@@ -312,6 +317,50 @@ export const refreshAccessToken = asyncHandler(
         500,
         "Internal Server Error while refreshing access token",
       );
+    }
+  },
+);
+
+export const passwordChange = asyncHandler(
+  async (request: Request, response: Response) => {
+    try {
+      const data: userPasswordChangeInput = request.body;
+
+      const validation = userPasswordChangeSchema.safeParse(data);
+
+      if (!validation.success) {
+        return responseHandler.sendValidationError(
+          response,
+          validation.error,
+          "Validation Error",
+        );
+      }
+
+      const { currentPassword, newPassword } = validation.data;
+
+      const userId = request.user?._id;
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return responseHandler.sendError(response, 404, "User not Found!!");
+      }
+
+      const isPasswordValid = await user.isPasswordCorrect(currentPassword);
+
+      if (!isPasswordValid) {
+        return responseHandler.sendError(response, 400, "Invalid credentials!!");
+      }
+
+      const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+      user.password = newHashedPassword;
+
+      return responseHandler.sendSuccess(response, 201, "Password Changed successfully");
+      
+    } catch (error: unknown) {
+      console.error(error);
+      return responseHandler.sendError(response, 500, "Internal Server Error while password change!!");
     }
   },
 );

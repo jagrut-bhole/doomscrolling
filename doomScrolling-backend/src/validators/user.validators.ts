@@ -20,3 +20,10 @@ export const userLoginSchema = z.object(({
 }));
 
 export type userLoginInput = z.infer<typeof userLoginSchema>
+
+export const userPasswordChangeSchema = z.object({
+  currentPassword: z.string().min(5, "Password must be at least 5 characters");
+  newPassword: z.string().min(5, "Password must be at least 5 characters");
+});
+
+export type userPasswordChangeInput = z.infer<typeof userPasswordChangeSchema>
