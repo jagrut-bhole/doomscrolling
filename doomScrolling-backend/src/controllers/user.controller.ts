@@ -166,11 +166,24 @@ export const loginUser = asyncHandler(
 export const logoutUser = asyncHandler(
   async (request: Request, response: Response) => {
     try {
+      const userId = request.user?._id;
       const incomingRefreshToken =
         request.cookies?.refreshToken ||
         request.header("Authorization")?.replace("Bearer ", "");
 
-      if (incomingRefreshToken) {
+      if (userId) {
+        await User.findByIdAndUpdate(
+          userId,
+          {
+            $unset: {
+              refreshToken: 1,
+            },
+          },
+          {
+            new: true,
+          },
+        );
+      } else if (incomingRefreshToken) {
         await User.findOneAndUpdate(
           { refreshToken: incomingRefreshToken },
           {
@@ -202,6 +215,17 @@ export const logoutUser = asyncHandler(
         "Internal Server Error while logging out the user",
       );
     }
+  },
+);
+
+export const getCurrentUser = asyncHandler(
+  async (request: Request, response: Response) => {
+    return responseHandler.sendSuccess(
+      response,
+      200,
+      "Current user fetched successfully",
+      request.user,
+    );
   },
 );
 

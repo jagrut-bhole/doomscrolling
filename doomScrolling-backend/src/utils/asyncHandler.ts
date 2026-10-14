@@ -1,17 +1,19 @@
 import type {
   Request,
-  Response
+  Response,
+  NextFunction
 } from "express";
 
 type ResponseHandler = (
   request: Request,
-  response: Response
+  response: Response,
+  next: NextFunction
 ) => Promise<any> | any;
 
 export const asyncHandler = (fn: ResponseHandler) => {
-  return async (request: Request, response: Response) => {
+  return async (request: Request, response: Response, next: NextFunction) => {
     try {
-      await fn(request, response);
+      await fn(request, response, next);
     } catch (error) {
       console.log("error");
       const message = error instanceof Error ? error.message : "Internal Server Error"; 

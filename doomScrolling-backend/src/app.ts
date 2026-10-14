@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
 import healthRoutes from "./routes/health.routes";
+import userRoutes from "./routes/user.routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app = express();
@@ -29,6 +30,7 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/v1/health", healthRoutes);
+app.use("/api/v1/users", userRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({

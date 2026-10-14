@@ -1,19 +1,26 @@
+import { Router } from "express";
+
+// controllers
 import {
-  Router,
-  type Request,
-  type Response} from "express";
-import User from "../models/user.model";
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  getCurrentUser,
+} from "@/controllers/user.controller";
+
+// middlewares
+import { verifyJWT } from "@/middlewares/auth.middleware";
 
 const router = Router();
 
-// POST -> /api/v1/users: Create User
-router.post("/create", async(
-  _req: Request,
-  res: Response
-) => {
-  try {
-    
-  } catch (error: unknown) {
-	console.error(error);
-  }
-}) 
+// Public routes
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.post("/refresh-token", refreshAccessToken);
+
+// Protected routes (require valid JWT accessToken)
+router.post("/logout", verifyJWT, logoutUser);
+router.get("/current-user", verifyJWT, getCurrentUser);
+
+export default router;
