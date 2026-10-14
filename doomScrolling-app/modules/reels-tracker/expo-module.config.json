@@ -1,0 +1,8 @@
+{
+  "name": "reels-tracker",
+  "platforms": ["android"],
+  "android": {
+    "package": "com.doomscrolling.reelstracker",
+    "modules": ["com.doomscrolling.reelstracker.ReelsTrackerModule"]
+  }
+}

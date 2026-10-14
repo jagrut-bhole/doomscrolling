@@ -1,0 +1,4 @@
+<resources>
+    <string name="accessibility_service_name">Reels Addiction Tracker</string>
+    <string name="accessibility_service_description">Detects Instagram Reels screen viewing and scroll transitions to track screen time and display the floating awareness badge.</string>
+</resources>
