@@ -8,7 +8,9 @@ export const generateAccessTokenAndRefreshToken = async (userId: string) => {
   }
 
   const accessToken = user.generateAccessToken();
+  // console.log("AccessToken: ",accessToken);
   const refreshToken = user.generateRefreshToken();
+  // console.log("RefreshToken: ", refreshToken);
 
   user.refreshToken = refreshToken;
 

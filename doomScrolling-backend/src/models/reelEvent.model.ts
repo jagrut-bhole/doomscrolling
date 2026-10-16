@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Types, model } from "mongoose";
+import { Document, Schema, Types, model } from "mongoose";
 
 export interface IReelEvent extends Document {
   userId: Types.ObjectId;
@@ -35,6 +35,6 @@ const reelEventSchema = new Schema<IReelEvent>(
 
 reelEventSchema.index({ userId: 1, clientEventId: 1 }, { unique: true });
 
-const ReelEvent = model<IReelEvent>("ReelEvent", reelEventSchema);
+const ReelEventModel = model<IReelEvent>("ReelEvent", reelEventSchema);
 
-export default ReelEvent;
+export default ReelEventModel;
