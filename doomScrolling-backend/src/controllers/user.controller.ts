@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 import { asyncHandler } from "@/utils/asyncHandler";
 import { responseHandler } from "@/utils/responseHandler";
 import { generateAccessTokenAndRefreshToken } from "@/utils/user.utils";
+import { validateData } from "@/utils/validate";
 
 // constants
 import {
@@ -29,6 +30,7 @@ import {
 
 // mongoose models
 import User from "@/models/user.model";
+import { validate } from "zod/v4/core";
 
 interface JwtRefreshPayload extends jwt.JwtPayload {
   _id: string;
@@ -36,331 +38,219 @@ interface JwtRefreshPayload extends jwt.JwtPayload {
 
 export const registerUser = asyncHandler(
   async (request: Request, response: Response) => {
-    try {
-      const data: userRegisterInput = request.body;
+    const data = validateData(userRegisterSchema, request.body, response);
 
-      const validation = userRegisterSchema.safeParse(data);
+    if (!data) return;
 
-      if (!validation.success) {
-        return responseHandler.sendValidationError(
-          response,
-          validation.error,
-          "Validation Error",
-        );
-      }
+    const { email, name, password, limit } = data;
 
-      const { name, email, password, limit } = validation.data;
-      const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.toLowerCase();
 
-      const existingUser = await User.findOne({
-        email: normalizedEmail,
-      });
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+    });
 
-      if (existingUser) {
-        return responseHandler.sendError(response, 400, "User already exists");
-      }
+    if (existingUser) {
+      return responseHandler.sendError(response, 400, "User already exists");
+    }
 
-      const user = await User.create({
-        name,
-        email: normalizedEmail,
-        password,
-        limit,
-      });
+    const user = await User.create({
+      name,
+      email: normalizedEmail,
+      password,
+      limit,
+    });
 
-      const { accessToken, refreshToken } =
-        await generateAccessTokenAndRefreshToken(user._id.toString());
+    const { accessToken, refreshToken } =
+      await generateAccessTokenAndRefreshToken(user._id.toString());
 
-      const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken",
-      );
+    const createdUser = await User.findById(user._id).select(
+      "-password -refreshToken",
+    );
 
-      if (!createdUser) {
-        return responseHandler.sendError(
-          response,
-          500,
-          "Something went wrong while registering the user!!",
-        );
-      }
-
-      response
-        .cookie("accessToken", accessToken, accessTokenCookieOptions)
-        .cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
-
-      return responseHandler.sendSuccess(
-        response,
-        201,
-        "User registered successfully",
-        createdUser,
-      );
-    } catch (error) {
-      console.error("Register Error:", error);
+    if (!createdUser) {
       return responseHandler.sendError(
         response,
         500,
-        "Internal Server Error while creating the user!",
+        "Something went wrong while registering the user!!",
       );
     }
+
+    response
+      .cookie("accessToken", accessToken, accessTokenCookieOptions)
+      .cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+
+    return responseHandler.sendSuccess(
+      response,
+      201,
+      "User registered successfully",
+      createdUser,
+    );
   },
 );
 
 export const loginUser = asyncHandler(
   async (request: Request, response: Response) => {
-    try {
-      const data: userLoginInput = request.body;
+    const data = validateData(userLoginSchema, request.body, response);
 
-      const validation = userLoginSchema.safeParse(data);
+    if (!data) return;
 
-      if (!validation.success) {
-        return responseHandler.sendValidationError(
-          response,
-          validation.error,
-          "Validation Error",
-        );
-      }
+    const { email, password } = data;
 
-      const { email, password } = validation.data;
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+    });
 
-      const user = await User.findOne({
-        email: email.toLowerCase(),
-      });
-
-      if (!user) {
-        return responseHandler.sendError(response, 404, "User not found");
-      }
-
-      const isPasswordValid = await user.isPasswordCorrect(password);
-
-      if (!isPasswordValid) {
-        return responseHandler.sendError(
-          response,
-          400,
-          "Invalid credentials!!",
-        );
-      }
-
-      const { accessToken, refreshToken } =
-        await generateAccessTokenAndRefreshToken(user._id.toString());
-
-      const loggedInUser = await User.findById(user._id).select(
-        "-password -refreshToken",
-      );
-
-      response
-        .cookie("accessToken", accessToken, accessTokenCookieOptions)
-        .cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
-
-      return responseHandler.sendSuccess(
-        response,
-        200,
-        "User logged in successfully",
-        loggedInUser,
-      );
-    } catch (error: unknown) {
-      console.error("Login Error:", error);
-      return responseHandler.sendError(
-        response,
-        500,
-        "Internal Server Error while logging in!",
-      );
+    if (!user) {
+      return responseHandler.sendError(response, 404, "User not found");
     }
+
+    const isPasswordValid = await user.isPasswordCorrect(password);
+
+    if (!isPasswordValid) {
+      return responseHandler.sendError(response, 400, "Invalid credentials!!");
+    }
+
+    const { accessToken, refreshToken } =
+      await generateAccessTokenAndRefreshToken(user._id.toString());
+
+    const loggedInUser = await User.findById(user._id).select(
+      "-password -refreshToken",
+    );
+
+    response
+      .cookie("accessToken", accessToken, accessTokenCookieOptions)
+      .cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+
+    return responseHandler.sendSuccess(
+      response,
+      200,
+      "User logged in successfully",
+      loggedInUser,
+    );
   },
 );
 
 export const logoutUser = asyncHandler(
   async (request: Request, response: Response) => {
-    try {
-      const userId = request.user?._id;
-      const incomingRefreshToken =
-        request.cookies?.refreshToken ||
-        request.header("Authorization")?.replace("Bearer ", "");
+    const userId = request.user?._id;
+    const incomingRefreshToken =
+      request.cookies?.refreshToken ||
+      request.header("Authorization")?.replace("Bearer ", "");
 
-      if (userId) {
-        await User.findByIdAndUpdate(
-          userId,
-          {
-            $unset: {
-              refreshToken: 1,
-            },
+    if (userId) {
+      await User.findByIdAndUpdate(
+        userId,
+        {
+          $unset: {
+            refreshToken: 1,
           },
-          {
-            new: true,
-          },
-        );
-      } else if (incomingRefreshToken) {
-        await User.findOneAndUpdate(
-          { refreshToken: incomingRefreshToken },
-          {
-            $unset: {
-              refreshToken: 1,
-            },
-          },
-          {
-            new: true,
-          },
-        );
-      }
-
-      response
-        .clearCookie("accessToken", cookieOptions)
-        .clearCookie("refreshToken", cookieOptions);
-
-      return responseHandler.sendSuccess(
-        response,
-        200,
-        "User logged out successfully",
-        {},
+        },
+        {
+          new: true,
+        },
       );
-    } catch (error) {
-      console.error("Logout Error:", error);
-      return responseHandler.sendError(
-        response,
-        500,
-        "Internal Server Error while logging out the user",
+    } else if (incomingRefreshToken) {
+      await User.findOneAndUpdate(
+        { refreshToken: incomingRefreshToken },
+        {
+          $unset: {
+            refreshToken: 1,
+          },
+        },
+        {
+          new: true,
+        },
       );
     }
-  },
-);
 
-export const getCurrentUser = asyncHandler(
-  async (request: Request, response: Response) => {
+    response
+      .clearCookie("accessToken", cookieOptions)
+      .clearCookie("refreshToken", cookieOptions);
+
     return responseHandler.sendSuccess(
       response,
       200,
-      "Current user fetched successfully",
-      request.user,
+      "User logged out successfully",
+      {},
     );
   },
 );
 
 export const refreshAccessToken = asyncHandler(
   async (request: Request, response: Response) => {
-    try {
-      const incomingRefreshToken =
-        request.cookies?.refreshToken ||
-        request.header("Authorization")?.replace("Bearer ", "");
+    const incomingRefreshToken =
+      request.cookies?.refreshToken ||
+      request.header("Authorization")?.replace("Bearer ", "");
 
-      if (!incomingRefreshToken) {
-        return responseHandler.sendError(
-          response,
-          401,
-          "Unauthorized request: Refresh token missing",
-        );
-      }
-
-      const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
-
-      if (!refreshTokenSecret) {
-        console.error(
-          "REFRESH_TOKEN_SECRET environment variable is not defined",
-        );
-        return responseHandler.sendError(
-          response,
-          500,
-          "Internal Server Error: Server misconfiguration",
-        );
-      }
-
-      let decodedToken: JwtRefreshPayload;
-
-      try {
-        decodedToken = jwt.verify(
-          incomingRefreshToken,
-          refreshTokenSecret,
-        ) as JwtRefreshPayload;
-      } catch (jwtError) {
-        return responseHandler.sendError(
-          response,
-          401,
-          "Invalid or expired refresh token",
-        );
-      }
-
-      const user = await User.findById(decodedToken?._id);
-
-      if (!user) {
-        return responseHandler.sendError(
-          response,
-          401,
-          "Invalid refresh token: User not found",
-        );
-      }
-
-      // Security check: verify token matches the one saved in the database
-      if (user.refreshToken !== incomingRefreshToken) {
-        return responseHandler.sendError(
-          response,
-          401,
-          "Refresh token is expired or has been revoked",
-        );
-      }
-
-      // Generate new tokens (Refresh Token Rotation)
-      const { accessToken, refreshToken: newRefreshToken } =
-        await generateAccessTokenAndRefreshToken(user._id.toString());
-
-      response
-        .cookie("accessToken", accessToken, accessTokenCookieOptions)
-        .cookie("refreshToken", newRefreshToken, refreshTokenCookieOptions);
-
-      return responseHandler.sendSuccess(
+    if (!incomingRefreshToken) {
+      return responseHandler.sendError(
         response,
-        200,
-        "Access token refreshed successfully",
-        {
-          accessToken,
-        },
+        401,
+        "Unauthorized request: Refresh token missing",
       );
-    } catch (error: unknown) {
-      console.error("Refresh Access Token Error:", error);
+    }
+
+    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+
+    if (!refreshTokenSecret) {
+      console.error("REFRESH_TOKEN_SECRET environment variable is not defined");
       return responseHandler.sendError(
         response,
         500,
-        "Internal Server Error while refreshing access token",
+        "Internal Server Error: Server misconfiguration",
       );
     }
-  },
-);
 
-export const passwordChange = asyncHandler(
-  async (request: Request, response: Response) => {
+    let decodedToken: JwtRefreshPayload;
+
     try {
-      const data: userPasswordChangeInput = request.body;
-
-      const validation = userPasswordChangeSchema.safeParse(data);
-
-      if (!validation.success) {
-        return responseHandler.sendValidationError(
-          response,
-          validation.error,
-          "Validation Error",
-        );
-      }
-
-      const { currentPassword, newPassword } = validation.data;
-
-      const userId = request.user?._id;
-
-      const user = await User.findById(userId);
-
-      if (!user) {
-        return responseHandler.sendError(response, 404, "User not Found!!");
-      }
-
-      const isPasswordValid = await user.isPasswordCorrect(currentPassword);
-
-      if (!isPasswordValid) {
-        return responseHandler.sendError(response, 400, "Invalid credentials!!");
-      }
-
-      const newHashedPassword = await bcrypt.hash(newPassword, 10);
-
-      user.password = newHashedPassword;
-
-      return responseHandler.sendSuccess(response, 201, "Password Changed successfully");
-      
-    } catch (error: unknown) {
-      console.error(error);
-      return responseHandler.sendError(response, 500, "Internal Server Error while password change!!");
+      decodedToken = jwt.verify(
+        incomingRefreshToken,
+        refreshTokenSecret,
+      ) as JwtRefreshPayload;
+    } catch (jwtError) {
+      return responseHandler.sendError(
+        response,
+        401,
+        "Invalid or expired refresh token",
+      );
     }
+
+    const user = await User.findById(decodedToken?._id);
+
+    if (!user) {
+      return responseHandler.sendError(
+        response,
+        401,
+        "Invalid refresh token: User not found",
+      );
+    }
+
+    // Security check: verify token matches the one saved in the database
+    if (user.refreshToken !== incomingRefreshToken) {
+      return responseHandler.sendError(
+        response,
+        401,
+        "Refresh token is expired or has been revoked",
+      );
+    }
+
+    // Generate new tokens (Refresh Token Rotation)
+    const { accessToken, refreshToken: newRefreshToken } =
+      await generateAccessTokenAndRefreshToken(user._id.toString());
+
+    response
+      .cookie("accessToken", accessToken, accessTokenCookieOptions)
+      .cookie("refreshToken", newRefreshToken, refreshTokenCookieOptions);
+
+    return responseHandler.sendSuccess(
+      response,
+      200,
+      "Access token refreshed successfully",
+      {
+        accessToken,
+      },
+    );
   },
 );

@@ -1,4 +1,4 @@
-import type { Response } from "express";
+import { type Response } from "express";
 
 export class responseHandler {
   static sendSuccess<T>(

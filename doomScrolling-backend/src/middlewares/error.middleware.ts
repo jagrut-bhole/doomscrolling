@@ -1,19 +1,17 @@
-import type {
-  Request,
-  Response,
-  NextFunction
-} from "express";
+import type { Request, Response, NextFunction } from "express";
+import { responseHandler } from "@/utils/responseHandler";
 
-export const errorMiddleware = (
+export const globalErrorHandler = (
   err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-): void => {
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) => {
   console.error(err);
 
-  res.status(500).json({
-    success: false,
-    message: "Internal Server Error"
-  })
-}
+  if (response.headersSent) {
+    return next(err);
+  }
+
+  return responseHandler.sendError(response, 500, "Internal Server Error");
+};
