@@ -19,3 +19,7 @@ export const userPasswordChangeSchema = z.object({
 });
 
 export type userPasswordChangeInput = z.infer<typeof userPasswordChangeSchema>
+
+export const changeLimitSchema = z.object({
+  newLimit: z.number().min(1)
+});

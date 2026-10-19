@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Alert,
   ActivityIndicator,
@@ -23,7 +22,9 @@ import {
 } from '@/services/tracking';
 import type { UserProfile } from '@/types/profile';
 import type { AppSettings } from '@/types/settings';
-
+import FloatingDock from '@/components/navigation/FloatingDock';
+import { syncLocalDataToBackend } from '@/services/syncService';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const PRESET_LIMITS = [15, 30, 45, 60, 90];
 
 export default function SettingsScreen() {
@@ -204,6 +205,27 @@ export default function SettingsScreen() {
     );
   };
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncCloud = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await syncLocalDataToBackend();
+      if (res.success) {
+        Alert.alert(
+          'Sync Complete ☁️',
+          `Reconciled ${res.syncedSessions} sessions and ${res.syncedEvents} reel events with MongoDB!`
+        );
+      } else {
+        Alert.alert('Sync Notice', res.error || 'Could not sync to server');
+      }
+    } catch (err: any) {
+      Alert.alert('Sync Failed', err.message || 'An error occurred during sync');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   if (!profile || !settings) {
     return (
       <SafeAreaView className="flex-1 bg-white items-center justify-center">
@@ -226,7 +248,11 @@ export default function SettingsScreen() {
         <View className="w-12" />
       </View>
 
-      <ScrollView className="flex-1 px-5 pt-4 pb-10" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1 px-5 pt-4"
+        contentContainerStyle={{ paddingBottom: 110 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Card */}
         <View className="p-5 mb-5 rounded-3xl bg-white border border-gray-100 shadow-sm">
           <Text className="text-base font-bold text-gray-900 mb-4">Profile Information</Text>
@@ -395,6 +421,21 @@ export default function SettingsScreen() {
           </Text>
 
           <TouchableOpacity
+            onPress={handleSyncCloud}
+            disabled={isSyncing}
+            className="w-full py-3 mb-3 rounded-xl border border-blue-200 bg-blue-50/70 items-center justify-center active:bg-blue-100 flex-row"
+          >
+            {isSyncing ? (
+              <ActivityIndicator size="small" color="#2563EB" className="mr-2" />
+            ) : (
+              <Text className="text-base mr-1.5">☁️</Text>
+            )}
+            <Text className="text-blue-600 text-sm font-bold">
+              {isSyncing ? 'Reconciling with Server...' : 'Sync SQLite Data to Cloud (MongoDB)'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             onPress={handleResetHistory}
             className="w-full py-3 mb-3 rounded-xl border border-rose-200 bg-rose-50/50 items-center justify-center active:bg-rose-100"
           >
@@ -409,6 +450,9 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Floating Bottom Dock */}
+      <FloatingDock activeTab="profile" />
     </SafeAreaView>
   );
 }

@@ -4,9 +4,11 @@ export interface IUsageSession extends Document {
   userId: Types.ObjectId;
   clientSessionId: string;
   startedAt: Date;
-  endedAt: Date;
+  endedAt?: Date | null;
   durationSeconds: number;
   reelsCount: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const usageSessionSchema = new Schema<IUsageSession>(

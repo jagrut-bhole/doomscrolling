@@ -7,6 +7,9 @@ import cookieParser from "cookie-parser";
 import healthRoutes from "./routes/health.routes";
 import userRoutes from "./routes/user.routes";
 import profileRoutes from "./routes/profile.routes";
+import dashboardRoutes from "./routes/dashboard.routes";
+import sessionRoutes from "./routes/session.routes";
+import syncRoutes from "./routes/sync.routes";
 import { globalErrorHandler } from "./middlewares/error.middleware";
 
 const app = express();
@@ -35,6 +38,18 @@ app.get("/", (_req, res) => {
 app.use("/api/v1/health", healthRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/profile", profileRoutes);
+
+// Dashboard routes
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
+
+// Session routes
+app.use("/api/sessions", sessionRoutes);
+app.use("/api/v1/sessions", sessionRoutes);
+
+// Sync routes
+app.use("/api/sync", syncRoutes);
+app.use("/api/v1/sync", syncRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({

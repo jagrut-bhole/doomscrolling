@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import type { ReelSession } from '@/types/session';
 import { formatDuration } from '@/services/usageStatistics';
 
@@ -8,6 +9,8 @@ interface RecentSessionsProps {
 }
 
 export default function RecentSessions({ sessions }: RecentSessionsProps) {
+  const router = useRouter();
+
   const formatTime = (isoString: string): string => {
     try {
       const date = new Date(isoString);
@@ -38,8 +41,16 @@ export default function RecentSessions({ sessions }: RecentSessionsProps) {
   return (
     <View className="w-full p-5 mb-8 rounded-3xl bg-white border border-gray-100 shadow-sm">
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-base font-bold text-gray-900">Recent Scrolling Sessions</Text>
-        <Text className="text-xs text-gray-400 font-medium">{sessions.length} recorded</Text>
+        <View>
+          <Text className="text-base font-bold text-gray-900">Recent Scrolling Sessions</Text>
+          <Text className="text-xs text-gray-400 font-medium">{sessions.length} recorded</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => router.push('/sessions' as any)}
+          className="px-3 py-1.5 rounded-xl bg-blue-50 active:bg-blue-100"
+        >
+          <Text className="text-xs font-bold text-blue-600">View All →</Text>
+        </TouchableOpacity>
       </View>
 
       {sessions.length === 0 ? (
@@ -56,7 +67,12 @@ export default function RecentSessions({ sessions }: RecentSessionsProps) {
             const isActive = !session.ended_at;
 
             return (
-              <View key={session.id} className="py-3.5 flex-row items-center justify-between">
+              <TouchableOpacity
+                key={session.id}
+                onPress={() => router.push(`/sessions/${session.id}` as any)}
+                activeOpacity={0.7}
+                className="py-3.5 flex-row items-center justify-between active:bg-gray-50/50 rounded-xl px-1"
+              >
                 <View className="flex-row items-center flex-1 pr-3">
                   <View
                     className={`w-9 h-9 rounded-xl items-center justify-center mr-3 ${
@@ -91,7 +107,7 @@ export default function RecentSessions({ sessions }: RecentSessionsProps) {
                     {isActive ? 'Ongoing' : 'Completed'}
                   </Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>

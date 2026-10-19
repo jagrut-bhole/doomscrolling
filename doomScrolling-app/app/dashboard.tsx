@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   RefreshControl,
   TouchableOpacity,
@@ -18,7 +17,8 @@ import UsageSummary from '@/components/dashboard/UsageSummary';
 import DailyLimitProgress from '@/components/dashboard/DailyLimitProgress';
 import UsageChart from '@/components/dashboard/UsageChart';
 import RecentSessions from '@/components/dashboard/RecentSessions';
-
+import FloatingDock from '@/components/navigation/FloatingDock';
+import { SafeAreaView } from 'react-native-safe-area-context';
 export default function DashboardScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -134,6 +134,7 @@ export default function DashboardScreen() {
 
       <ScrollView
         className="flex-1 px-5 pt-4"
+        contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
@@ -173,7 +174,7 @@ export default function DashboardScreen() {
         <RecentSessions sessions={dashboardData.recentSessions} />
 
         {/* Development / Testing Quick Action */}
-        <View className="mb-10 p-4 rounded-2xl bg-white border border-dashed border-gray-300 items-center">
+        <View className="mb-6 p-4 rounded-2xl bg-white border border-dashed border-gray-300 items-center">
           <Text className="text-xs font-semibold text-gray-500 mb-2">Test Session Simulator</Text>
           <TouchableOpacity
             onPress={handleSimulateSession}
@@ -185,6 +186,9 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Floating Bottom Dock */}
+      <FloatingDock activeTab="dashboard" />
     </SafeAreaView>
   );
 }

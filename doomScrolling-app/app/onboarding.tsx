@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import ProfileForm from '@/components/onboarding/ProfileForm';
 import PermissionSetup from '@/components/onboarding/PermissionSetup';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OnboardingScreen() {
   const router = useRouter();

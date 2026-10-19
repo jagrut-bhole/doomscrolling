@@ -84,7 +84,11 @@ export const registerUser = asyncHandler(
       response,
       201,
       "User registered successfully",
-      createdUser,
+      {
+        user: createdUser,
+        accessToken,
+        refreshToken,
+      },
     );
   },
 );
@@ -126,7 +130,11 @@ export const loginUser = asyncHandler(
       response,
       200,
       "User logged in successfully",
-      loggedInUser,
+      {
+        user: loggedInUser,
+        accessToken,
+        refreshToken,
+      },
     );
   },
 );
@@ -181,7 +189,8 @@ export const refreshAccessToken = asyncHandler(
   async (request: Request, response: Response) => {
     const incomingRefreshToken =
       request.cookies?.refreshToken ||
-      request.header("Authorization")?.replace("Bearer ", "");
+      request.header("Authorization")?.replace("Bearer ", "") ||
+      request.body?.refreshToken;
 
     if (!incomingRefreshToken) {
       return responseHandler.sendError(
@@ -250,6 +259,7 @@ export const refreshAccessToken = asyncHandler(
       "Access token refreshed successfully",
       {
         accessToken,
+        refreshToken: newRefreshToken,
       },
     );
   },

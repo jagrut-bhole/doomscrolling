@@ -7,18 +7,15 @@ import { validateData } from "@/utils/validate";
 
 // mongoose models
 import User from "@/models/user.model";
-import ReelEventModel from "@/models/reelEvent.model";
-import UsageSession from "@/models/usageSession.model";
-import UserSetting from "@/models/userSettings.model";
 
 // validators
 import {
+  changeLimitSchema,
   type profileUpdateInput,
   profileUpdateSchema,
   type userPasswordChangeInput,
   userPasswordChangeSchema,
 } from "@/validators/profile.validators";
-import bcrypt from "bcryptjs";
 
 export const getProfile = asyncHandler(
   async (request: Request, response: Response) => {
@@ -150,6 +147,36 @@ export const updatePassword = asyncHandler(
       response,
       200,
       "Password changed successfully",
+    );
+  },
+);
+
+export const changeLimit = asyncHandler(
+  async (request: Request, response: Response) => {
+    const userId = request.user?._id;
+
+    if (!userId) {
+      return responseHandler.sendError(response, 400, "UserID not found!!");
+    }
+
+    const data = validateData(changeLimitSchema, request.body, response);
+
+    if (!data) return;
+
+    const { newLimit } = data;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return responseHandler.sendError(response, 404, "User not found!!");
+    }
+
+    user.limit = newLimit;
+
+    return responseHandler.sendSuccess(
+      response,
+      200,
+      "Limit changed successfully!!",
     );
   },
 );
