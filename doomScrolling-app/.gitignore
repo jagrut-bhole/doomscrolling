@@ -42,6 +42,14 @@ example
 /ios
 /android
 
+# Gradle build outputs
+build/
+**/build/
+.gradle/
+**/.gradle/
+*.dex
+*.class
+
 #
 .claude/
 .idea/

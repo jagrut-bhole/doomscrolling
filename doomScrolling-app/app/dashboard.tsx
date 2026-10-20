@@ -110,7 +110,7 @@ export default function DashboardScreen() {
     permissions && (!permissions.usageAccess || !permissions.accessibility || !permissions.overlay);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
 
       {/* Top Header */}
@@ -134,7 +134,7 @@ export default function DashboardScreen() {
 
       <ScrollView
         className="flex-1 px-5 pt-4"
-        contentContainerStyle={{ paddingBottom: 110 }}
+        contentContainerStyle={{ paddingBottom: 150 }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >

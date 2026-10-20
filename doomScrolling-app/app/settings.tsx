@@ -235,7 +235,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
       {/* Top Header */}
       <View className="px-6 py-4 bg-white border-b border-gray-100 flex-row items-center justify-between">
         <TouchableOpacity
@@ -250,7 +250,7 @@ export default function SettingsScreen() {
 
       <ScrollView
         className="flex-1 px-5 pt-4"
-        contentContainerStyle={{ paddingBottom: 110 }}
+        contentContainerStyle={{ paddingBottom: 150 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Profile Card */}

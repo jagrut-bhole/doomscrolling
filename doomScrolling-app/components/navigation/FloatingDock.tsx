@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useAnimatedStyle,
   withSpring,
@@ -136,6 +137,7 @@ function DockItem({
 
 export default function FloatingDock({ activeTab }: FloatingDockProps) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handleNavigate = (tab: DockTab) => {
     if (tab === activeTab) return;
@@ -149,8 +151,14 @@ export default function FloatingDock({ activeTab }: FloatingDockProps) {
     }
   };
 
+  // Position cleanly above Android 3-button navigation bar / iOS home indicator
+  const bottomPosition = Math.max(insets.bottom, 12) + (Platform.OS === 'android' ? 10 : 8);
+
   return (
-    <View pointerEvents="box-none" style={styles.dockWrapper}>
+    <View
+      pointerEvents="box-none"
+      style={[styles.dockWrapper, { bottom: bottomPosition }]}
+    >
       <Animated.View style={styles.tiltedDock}>
         {DOCK_ITEMS.map((item) => (
           <DockItem
@@ -169,12 +177,12 @@ export default function FloatingDock({ activeTab }: FloatingDockProps) {
 const styles = StyleSheet.create({
   dockWrapper: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 24 : 16,
     left: 0,
     right: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 50,
+    zIndex: 9999,
+    elevation: 30,
   },
   tiltedDock: {
     flexDirection: 'row',
@@ -184,14 +192,14 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 14,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.75)',
+    borderColor: 'rgba(255, 255, 255, 0.85)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.22,
     shadowRadius: 28,
-    elevation: 16,
+    elevation: 30,
     // 3D stage tilt effect
     transform: [{ perspective: 1000 }, { rotateX: '14deg' }],
   },

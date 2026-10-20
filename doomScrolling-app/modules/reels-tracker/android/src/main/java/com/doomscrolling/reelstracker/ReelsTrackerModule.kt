@@ -35,7 +35,7 @@ class ReelsTrackerModule : Module() {
         }
 
         AsyncFunction("openUsageAccessSettings") {
-            val context = appContext.currentActivity ?: appContext.reactContext ?: return@AsyncFunction
+            val context = appContext.currentActivity ?: appContext.reactContext ?: return@AsyncFunction null
             val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
@@ -43,7 +43,7 @@ class ReelsTrackerModule : Module() {
         }
 
         AsyncFunction("openAccessibilitySettings") {
-            val context = appContext.currentActivity ?: appContext.reactContext ?: return@AsyncFunction
+            val context = appContext.currentActivity ?: appContext.reactContext ?: return@AsyncFunction null
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
@@ -51,7 +51,7 @@ class ReelsTrackerModule : Module() {
         }
 
         AsyncFunction("openOverlaySettings") {
-            val context = appContext.currentActivity ?: appContext.reactContext ?: return@AsyncFunction
+            val context = appContext.currentActivity ?: appContext.reactContext ?: return@AsyncFunction null
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:" + context.packageName)
@@ -71,7 +71,7 @@ class ReelsTrackerModule : Module() {
         }
 
         AsyncFunction("hideOverlay") {
-            val context = appContext.reactContext ?: return@AsyncFunction
+            val context = appContext.reactContext ?: return@AsyncFunction null
             val intent = Intent(context, FloatingOverlayService::class.java).apply {
                 action = FloatingOverlayService.ACTION_HIDE
             }

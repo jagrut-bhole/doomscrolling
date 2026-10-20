@@ -104,7 +104,7 @@ export default function SessionDetailScreen() {
     session.reels_count > 0 ? Math.round(session.duration_seconds / session.reels_count) : 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right', 'bottom']}>
       <StatusBar barStyle="dark-content" />
 
       {/* Top Header */}
@@ -142,7 +142,7 @@ export default function SessionDetailScreen() {
 
       <ScrollView
         className="flex-1 px-5 pt-4"
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 60 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Card */}
